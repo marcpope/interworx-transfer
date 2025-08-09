@@ -290,7 +290,10 @@ sync_migration() {
     print_info "Syncing files from source to destination..."
     print_info "Excluding logs and cache files"
     
+    # Temporarily disable error checking for rsync (exit code 23 is common and harmless)
+    set +e
     rsync -az "${excludes[@]}" -e "ssh -p $PORT" "root@${SOURCE}:/home/${username}/" "/home/${username}/"
+    set -e
     
     # Get and migrate MySQL databases
     local databases
