@@ -290,9 +290,14 @@ sync_migration() {
     print_info "Syncing files from source to destination..."
     print_info "Excluding logs and cache files"
     
-    if ! rsync -az "${excludes[@]}" -e "ssh -p $PORT" "root@${SOURCE}:/home/${username}/" "/home/${username}/"; then
-        print_error "Rsync failed"
+    rsync -az "${excludes[@]}" -e "ssh -p $PORT" "root@${SOURCE}:/home/${username}/" "/home/${username}/"
+    local rsync_exit_code=$?
+    
+    if [[ $rsync_exit_code -ne 0 && $rsync_exit_code -ne 23 ]]; then
+        print_error "Rsync failed with exit code: $rsync_exit_code"
         exit 1
+    elif [[ $rsync_exit_code -eq 23 ]]; then
+        print_warning "Some files/attributes were not transferred (this is usually harmless)"
     fi
     
     # Fix ownership
