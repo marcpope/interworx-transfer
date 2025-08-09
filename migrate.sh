@@ -112,7 +112,7 @@ get_linux_username_source() {
     print_info "Determining Linux username for domain: $domain (from source)"
     
     # Try to get username from source server
-    username=$(ssh -p "$PORT" root@"$SOURCE" "~iworx/bin/listaccounts.pex | grep -E \"^$domain\" | awk '{print \$2}'" 2>/dev/null || echo "")
+    username=$(ssh -p "$PORT" root@"$SOURCE" "~iworx/bin/listaccounts.pex | grep \"$domain\" | awk '{print \$1}'" 2>/dev/null || echo "")
     
     if [[ -z "$username" ]]; then
         # If that fails, try alternative method
@@ -135,7 +135,7 @@ get_linux_username_dest() {
     print_info "Determining Linux username for domain: $domain (from destination)"
     
     # Try to get username from destination server
-    username=$(~iworx/bin/listaccounts.pex | grep -E "^$domain" | awk '{print $2}' 2>/dev/null || echo "")
+    username=$(~iworx/bin/listaccounts.pex | grep "$domain" | awk '{print $1}' 2>/dev/null || echo "")
     
     if [[ -z "$username" ]]; then
         # If that fails, try alternative method
