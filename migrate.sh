@@ -109,7 +109,7 @@ get_linux_username_source() {
     local domain=$1
     local username
     
-    print_info "Determining Linux username for domain: $domain (from source)"
+    print_info "Determining Linux username for domain: $domain (from source)" >&2
     
     # Try to get username from source server
     username=$(ssh -p "$PORT" root@"$SOURCE" "~iworx/bin/listaccounts.pex | grep \"$domain\" | awk '{print \$1}'" 2>/dev/null || echo "")
@@ -132,7 +132,7 @@ get_linux_username_dest() {
     local domain=$1
     local username
     
-    print_info "Determining Linux username for domain: $domain (from destination)"
+    print_info "Determining Linux username for domain: $domain (from destination)" >&2
     
     # Try to get username from destination server
     username=$(~iworx/bin/listaccounts.pex | grep "$domain" | awk '{print $1}' 2>/dev/null || echo "")
@@ -155,13 +155,13 @@ get_mysql_databases() {
     local username=$1
     local databases
     
-    print_info "Finding MySQL databases for user: $username"
+    print_info "Finding MySQL databases for user: $username" >&2
     
     # Get list of databases for the user
     databases=$(ssh -p "$PORT" root@"$SOURCE" "mysql -e \"SHOW DATABASES LIKE '${username}_%';\" -sN" 2>/dev/null || echo "")
     
     if [[ -z "$databases" ]]; then
-        print_warning "No MySQL databases found for user $username"
+        print_warning "No MySQL databases found for user $username" >&2
     fi
     
     echo "$databases"
@@ -242,16 +242,6 @@ structure_only_migration() {
         rm -f "/tmp/${backup_file}"
         exit 1
     fi
-    
-    # Get username for database migration
-    local username
-    username=$(get_linux_username_dest "$DOMAIN")
-    print_info "Linux username: $username"
-    
-    # Get and migrate MySQL databases
-    local databases
-    databases=$(get_mysql_databases "$username")
-    migrate_mysql_databases "$username" "$databases"
     
     # Cleanup
     if [[ "$CLEANUP" == true ]]; then
