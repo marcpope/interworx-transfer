@@ -299,11 +299,8 @@ sync_migration() {
     elif [[ $rsync_exit_code -eq 23 ]]; then
         print_warning "Some files/attributes were not transferred (this is usually harmless)"
     fi
-    
-    # Fix ownership
-    print_info "Fixing file ownership..."
-    chown -R "${username}:${username}" "/home/${username}/"
-    
+
+
     # Get and migrate MySQL databases
     local databases
     databases=$(get_mysql_databases "$username")
