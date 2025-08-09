@@ -104,12 +104,12 @@ get_primary_ip() {
     echo "$primary_ip"
 }
 
-# Function to get Linux username from domain
-get_linux_username() {
+# Function to get Linux username from domain on source server
+get_linux_username_source() {
     local domain=$1
     local username
     
-    print_info "Determining Linux username for domain: $domain"
+    print_info "Determining Linux username for domain: $domain (from source)"
     
     # Try to get username from source server
     username=$(ssh -p "$PORT" root@"$SOURCE" "~iworx/bin/listaccounts.pex | grep -E \"^$domain\" | awk '{print \$2}'" 2>/dev/null || echo "")
@@ -120,7 +120,30 @@ get_linux_username() {
     fi
     
     if [[ -z "$username" ]]; then
-        print_error "Failed to determine Linux username for domain $domain"
+        print_error "Failed to determine Linux username for domain $domain on source server"
+        exit 1
+    fi
+    
+    echo "$username"
+}
+
+# Function to get Linux username from domain on destination server
+get_linux_username_dest() {
+    local domain=$1
+    local username
+    
+    print_info "Determining Linux username for domain: $domain (from destination)"
+    
+    # Try to get username from destination server
+    username=$(~iworx/bin/listaccounts.pex | grep -E "^$domain" | awk '{print $2}' 2>/dev/null || echo "")
+    
+    if [[ -z "$username" ]]; then
+        # If that fails, try alternative method
+        username=$(grep -l "^$domain" /home/*/var/*/siteworx/accounts/*/domain 2>/dev/null | head -1 | cut -d'/' -f3 || echo "")
+    fi
+    
+    if [[ -z "$username" ]]; then
+        print_error "Failed to determine Linux username for domain $domain on destination server"
         exit 1
     fi
     
@@ -214,7 +237,7 @@ structure_only_migration() {
     
     # Import the account
     print_info "Importing SiteWorx account..."
-    if ! ~iworx/bin/import.pex --control-panel=siteworx --archive="/tmp/${backup_file}" --create-reseller --ipv4 "$primary_ip"; then
+    if ! ~iworx/bin/import.pex --control-panel=siteworx --archive="/tmp/${backup_file}" --ipv4 "$primary_ip"; then
         print_error "Failed to import SiteWorx account"
         rm -f "/tmp/${backup_file}"
         exit 1
@@ -222,7 +245,7 @@ structure_only_migration() {
     
     # Get username for database migration
     local username
-    username=$(get_linux_username "$DOMAIN")
+    username=$(get_linux_username_dest "$DOMAIN")
     print_info "Linux username: $username"
     
     # Get and migrate MySQL databases
@@ -245,7 +268,7 @@ sync_migration() {
     
     # Get username
     local username
-    username=$(get_linux_username "$DOMAIN")
+    username=$(get_linux_username_source "$DOMAIN")
     print_info "Linux username: $username"
     
     # Check if user directory exists on destination
