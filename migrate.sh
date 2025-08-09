@@ -290,7 +290,7 @@ sync_migration() {
     print_info "Syncing files from source to destination..."
     print_info "Excluding logs and cache files"
     
-    if ! rsync -az --progress "${excludes[@]}" -e "ssh -p $PORT" "root@${SOURCE}:/home/${username}/" "/home/${username}/"; then
+    if ! rsync -az "${excludes[@]}" -e "ssh -p $PORT" "root@${SOURCE}:/home/${username}/" "/home/${username}/"; then
         print_error "Rsync failed"
         exit 1
     fi
